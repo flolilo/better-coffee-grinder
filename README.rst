@@ -40,8 +40,8 @@ Proposed features
 
 - Rotary encoder to adjust timing (rotate) / change mode (push)
 
-- *Best case*: Grinding in all modes can be paused by clicking the start/stop switch (auto-reset after
-  a few seconds)
+- *Best case*: Grinding in all modes can be paused by clicking the start/stop switch (auto-reset
+  after a few seconds)
 
 - Cherry MX switch for starting/stopping the grinding (this is more of a haptic upgrade)
 
@@ -61,7 +61,7 @@ Parts
 
 Nothing yet decided, but likely:
 
-- MC: Perhaps RP2040-based, should be CircuitPython compatible, needs at least 8 GPIOs + I2C.
+- MC: Perhaps RP2040-based, should be Micro- or CircuitPython compatible, needs >=8 GPIOs + I2C.
 
 - Motor relay: Omron G2RL-1A or Omron G2RL-1A-E (or something alike)
 
