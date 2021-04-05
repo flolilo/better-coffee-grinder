@@ -61,15 +61,15 @@ Parts
 
 Nothing yet decided, but likely:
 
-- MC: Perhaps RP2040-based, should be Micro- or CircuitPython compatible, needs >=8 GPIOs + I2C.
+- MC: Perhaps RP2040-based, should be Micro- or CircuitPython compatible, needs >=7 GPIOs + I2C.
 
-- Motor relay: Omron G2RL-1A or Omron G2RL-1A-E (or something alike)
+- Motor relay: Omron G2RL-1A is the OEM one, so something comparable with 5VDC coil voltage.
 
-  - Also needed to control it: NPN 2N2222, diode 1N4007, resistor 1 kOhm
+  - Also needed to control it: NPN 2N2222 (+ NPN BC109), diode 1N4007 (or Schottky), resistor 1 kOhm
 
 - *If weighing is feasible*: Any load cell <1kg + HX711
 
-- *If it fits into the original button's space*: Cherry MX Green or Grey
+- *If it fits into the original button's space*: Cherry MX Green or Grey, else low profile?
 
 - Encoder: ALPS STEC11B09
 
