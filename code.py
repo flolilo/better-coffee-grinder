@@ -36,7 +36,6 @@ dip2.direction = Direction.INPUT
 btn_porta = DigitalInOut(board.D4)
 btn_porta.direction = Direction.INPUT
 encoder = rotaryio.IncrementalEncoder(board.D5, board.D6)
-last_position = None
 btn_enc = DigitalInOut(board.D7)
 btn_enc.direction = Direction.INPUT
 
@@ -54,8 +53,6 @@ debug_led_btn_enc.direction = Direction.OUTPUT
 
 
 # Read the DIPs:
-debug_led_dip1.value = dip1.value
-debug_led_dip2.value = dip2.value
 mode = 0
 """ DIP modes:
     OFF/OFF 0   manual
@@ -72,17 +69,38 @@ print("DIP set to mode " + str(mode))
 
 # Code so far:
 timer_time = 7.0
+btn_enc_state = None
+btn_porta_state = None
+last_position = encoder.position
 while True:
-    if btn_enc.value and mode < 3:
-        mode += 1
+    current_position = encoder.position
+    position_change = current_position - last_position
+    if position_change != 0:
+        if timer_time <= 0.1 and position_change < 0:
+            timer_time = 60.1
+        elif timer_time >= 60.0 and position_change > 0:
+            timer_time = 0.0
+        timer_time = round(timer_time + position_change / 10, 1)
+        print(str(timer_time))
+    last_position = current_position
+    if not btn_enc.value and btn_enc_state is None:
+        btn_enc_state = "pressed"
+    if btn_enc.value and btn_enc_state == "pressed":
+        if mode < 3:
+            mode += 1
+        else:
+            mode = 0
         print("Mode changed to " + str(mode))
-        time.sleep(0.3)
-    elif btn_enc.value and mode >= 3:
-        mode = 0
-        print("Mode changed to " + str(mode))
-        time.sleep(0.3)
-
-    position = encoder.position
-    if last_position is None or position != last_position:
-        print(position)
-    last_position = position
+        btn_enc_state = None
+    if not btn_porta.value and btn_porta_state is None:
+        btn_porta_state = "pressed"
+    if btn_porta.value and btn_porta_state == "pressed":
+        print("Start!")
+        btn_porta_state = None
+        relay.value = True
+        i = timer_time
+        while i > 0:
+            i -= 0.1
+            print(str(i))
+            time.sleep(0.1)
+        print("Done!")
