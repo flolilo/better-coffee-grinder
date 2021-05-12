@@ -1,4 +1,3 @@
-import time
 import board
 from digitalio import DigitalInOut, Direction
 import rotaryio
@@ -64,6 +63,9 @@ if dip1.value:
     mode += 1
 if dip2.value:
     mode += 2
+# No mode 3 as of now, so 3=0:
+if mode == 3:
+    mode = 0
 print("DIP set to mode " + str(mode))
 
 
@@ -86,7 +88,7 @@ while True:
     if not btn_enc.value and btn_enc_state is None:
         btn_enc_state = "pressed"
     if btn_enc.value and btn_enc_state == "pressed":
-        if mode < 3:
+        if mode < 2:  # No mode 3 as of now
             mode += 1
         else:
             mode = 0
