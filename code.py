@@ -2,6 +2,7 @@ import time
 import board
 from digitalio import DigitalInOut, Direction
 import rotaryio
+import time
 
 # Setting the pins up:
 """ Pinout Sparkfun Pro Micro RP2040 (DEV-17717):
@@ -53,24 +54,35 @@ debug_led_btn_enc.direction = Direction.OUTPUT
 
 
 # Read the DIPs:
-print("DIP 1 value: " + str(dip1.value))
-print("DIP 2 value: " + str(dip2.value))
 debug_led_dip1.value = dip1.value
 debug_led_dip2.value = dip2.value
+mode = 0
+""" DIP modes:
+    OFF/OFF 0   manual
+    ON/OFF  1   single
+    OFF/ON  2   double
+    ON/ON   3   manual (TODO: weight)
+"""
+if dip1.value:
+    mode += 1
+if dip2.value:
+    mode += 2
+print("DIP set to mode " + str(mode))
 
 
 # Code so far:
-"""
-time = 10.0
+timer_time = 7.0
 while True:
+    if btn_enc.value and mode < 3:
+        mode += 1
+        print("Mode changed to " + str(mode))
+        time.sleep(0.3)
+    elif btn_enc.value and mode >= 3:
+        mode = 0
+        print("Mode changed to " + str(mode))
+        time.sleep(0.3)
+
     position = encoder.position
     if last_position is None or position != last_position:
         print(position)
     last_position = position
-"""
-for  i in range(0, 1000):
-    print("Btn Porta: " + str(btn_porta.value) + "\t, Btn Enc: " + str(btn_enc.value))
-    debug_led_btn_porta.value = btn_porta.value
-    debug_led_btn_enc.value = btn_enc.value
-    time.sleep(0.01)  # debounce delay
-
