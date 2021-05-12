@@ -101,6 +101,7 @@ while True:
         i = timer_time
         while i > 0:
             i -= 0.1
-            print(str(i))
+            print(str(i) + "\t" + str(time.monotonic()))
             time.sleep(0.1)
+        relay.value = False
         print("Done!")
