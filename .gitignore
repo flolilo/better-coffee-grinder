@@ -133,3 +133,5 @@ dmypy.json
 
 # RP2040
 RP2040/
+*.uf2
+*.pdf
