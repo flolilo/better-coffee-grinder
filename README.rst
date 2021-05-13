@@ -59,9 +59,9 @@ As it is now, I plan to do pull-ups and de-bouncing via dedicated hardware.
 Parts
 =====
 
-Nothing yet decided, but likely:
+For now, I have:
 
-- MC: Perhaps RP2040-based, should be Micro- or CircuitPython compatible, needs >=7 GPIOs + I2C.
+- µC: Sparkfun Pro Micro RP2040 (DEV-17717)
 
 - Motor relay: Omron G2RL-1A is the OEM one, so something comparable with 5VDC coil voltage.
 
@@ -70,6 +70,9 @@ Nothing yet decided, but likely:
 - *If weighing is feasible*: Any load cell <1kg + HX711
 
 - *If it fits into the original button's space*: Cherry MX Green or Grey, else low profile?
+
+  - They do fit, but getting it mounted will be a bit more difficult. You have to carve the switch's
+    case a bit and to mount it, I guess high pressure bicycle rim tape is the easiest option I have.
 
 - Encoder: ALPS STEC11B09
 
