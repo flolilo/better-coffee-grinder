@@ -135,3 +135,9 @@ dmypy.json
 RP2040/
 *.uf2
 *.pdf
+
+# Fritzing
+diagram/svg*
+diagram/bcg*
+diagram/part*
+diagram/png*
