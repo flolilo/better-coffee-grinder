@@ -77,6 +77,18 @@ For now, I have:
 - Encoder: ALPS STEC11B09
 
 
+Installation
+============
+
+- Install MicroPython on your device.
+
+- ``git clone -recurse-submodules`` this repository.
+
+- Using ``rshell`` (or a similar tool): ``cp ./main_micropython.py /pyboard/main.py``
+
+- Also, follow ``./micropython-rotary/README.md``'s instructions.
+
+
 Contribution
 ============
 
