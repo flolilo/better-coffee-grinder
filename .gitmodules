@@ -1,0 +1,3 @@
+[submodule "micropython-rotary"]
+	path = micropython-rotary
+	url = git@github.com:miketeachman/micropython-rotary.git
