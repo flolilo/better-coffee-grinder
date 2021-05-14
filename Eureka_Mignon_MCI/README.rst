@@ -8,6 +8,23 @@ Eureka Mignon M.C.I
 modifications?" showcase.
 
 
+OEM parts worth considering
+===========================
+
+Parts found in what I assume to be one of the latter model iterations (IC board rev. 1.1, presumably
+manufactured Q2/2019):
+
+- OEM Motor capacitor is a Sintex 45M.B3D 8
+
+- OEM relay is an Omron G2RL-1A @ 12VDC
+
+- Original IC power supply is a Myrra 44327
+
+- (Confirmation/details needed!) There are three 6,3mm blade connectors for mains/motor
+
+- (Confirmation/details needed!) There is a 2 pin connector for the porta switch
+
+
 Step-by-step guide
 ==================
 
@@ -18,6 +35,8 @@ dangers of this tutorial are for you to consider!
 
 - Long, thin PH2 screw driver (to open the case)
 
+- A utility blade if you decide to replace the OEM switch with an MX one
+
 
 **Aside from the RP2040-style µC, these parts are specifically needed (because)**:
 
@@ -25,11 +44,11 @@ dangers of this tutorial are for you to consider!
 
 - Optional: Cherry MX-style switch (OEM switch has poor tactile feeling)
 
-  - High pressure rim tape (to mount it without needing 3D files)
+  - A few cm of high pressure rim tape (to mount it without needing 3D files)
 
-  - Some 2,54mm connectors, both male and female (for the cable)
+  - Two 2,54mm connectors, both male and female (for the cable)
 
-  - 2 isolated wires, >= 30cm (for connecting it to the IC)
+  - Two isolated wires/2-wire cable, >= 30cm (for connecting it to the IC)
 
 - If you decide against the switch, you need another connector matching the OEM one (TBD: measure
   it, find model).
