@@ -53,11 +53,20 @@ debug_led_btn_enc.value(0)
 
 def readMode(mode):
     if mode == 1:
-        value = open('./mode1', 'r').read()
+        try:
+            value = open('./mode1', 'r').read()
+        except Exception:
+            value = 70
     elif mode == 2:
-        value = open('./mode2', 'r').read()
+        try:
+            value = open('./mode2', 'r').read()
+        except Exception:
+            value = 140
     elif mode == 3:
-        value = open('./mode3', 'r').read()
+        try:
+            value = open('./mode3', 'r').read()
+        except Exception:
+            value = 140
     else:
         value = None
 
