@@ -51,6 +51,20 @@ debug_led_btn_porta.value(0)
 debug_led_btn_enc.value(0)
 
 
+def readMode(mode):
+    if mode == 1:
+        value = open('./mode1', 'r').read()
+    elif mode == 2:
+        value = open('./mode2', 'r').read()
+    elif mode == 3:
+        value = open('./mode3', 'r').read()
+    else:
+        value = None
+
+    print(str(value))
+    return value
+
+
 # Read the DIPs:
 mode = 0
 """ DIP modes:
@@ -67,30 +81,31 @@ if dip2.value() == 1:
 if mode == 3:
     mode = 0
 print("DIP set to mode " + str(mode))
-
+mode_value = readMode(mode)
 
 # Code so far:
-timer_time = 7.0
 btn_enc_state = None
 btn_porta_state = None
 val_old = r.value()
 while True:
     val_new = r.value()
     if val_old > val_new:
-        timer_time = round(timer_time + 0.1, 1)
+        mode_value = round(mode_value + 0.1, 1)
         val_old = val_new
-        print('Timer:\t', str(timer_time))
+        print('Timer:\t', str(mode_value))
     elif val_old < val_new:
-        timer_time = round(timer_time - 0.1, 1)
+        mode_value = round(mode_value - 0.1, 1)
         val_old = val_new
-        print('Timer:\t', str(timer_time))
+        print('Timer:\t', str(mode_value))
     if not btn_enc.value() == 1 and btn_enc_state is None:
         btn_enc_state = 1
     if btn_enc.value() == 1 and btn_enc_state == 1:
         if mode < 2:  # No mode 3 as of now
             mode += 1
+            mode_value = readMode(mode)
         else:
             mode = 0
+            mode_value = readMode(mode)
         print("Mode changed to " + str(mode))
         btn_enc_state = None
     if not btn_porta.value() == 1 and btn_porta_state is None:
@@ -99,7 +114,7 @@ while True:
         print("Start!")
         btn_porta_state = None
         relay.value(1)
-        i = timer_time
+        i = mode_value
         while i > 0:
             i -= 0.1
             print(str(i))  # + "\t" + str(utime.monotonic()))
