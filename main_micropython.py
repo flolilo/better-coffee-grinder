@@ -2,6 +2,7 @@ import utime
 import machine
 from rotary_irq_rp2 import RotaryIRQ
 import rp2
+print("123")
 
 
 # Setting the pins up:
@@ -54,23 +55,23 @@ debug_led_btn_enc.value(0)
 def readMode(mode):
     if mode == 1:
         try:
-            value = open('./mode1', 'r').read()
+            value = int(open('./mode1', 'r').read())
         except Exception:
             value = 70
     elif mode == 2:
         try:
-            value = open('./mode2', 'r').read()
+            value = int(open('./mode2', 'r').read())
         except Exception:
             value = 140
     elif mode == 3:
         try:
-            value = open('./mode3', 'r').read()
+            value = int(open('./mode3', 'r').read())
         except Exception:
             value = 140
     else:
         value = None
 
-    print(str(value))
+    print("Value for this mode is: " + str(value))
     return value
 
 
@@ -99,11 +100,11 @@ val_old = r.value()
 while True:
     val_new = r.value()
     if val_old > val_new:
-        mode_value = round(mode_value + 0.1, 1)
+        mode_value += 1
         val_old = val_new
         print('Timer:\t', str(mode_value))
     elif val_old < val_new:
-        mode_value = round(mode_value - 0.1, 1)
+        mode_value -= 1
         val_old = val_new
         print('Timer:\t', str(mode_value))
     if not btn_enc.value() == 1 and btn_enc_state is None:
@@ -125,7 +126,7 @@ while True:
         relay.value(1)
         i = mode_value
         while i > 0:
-            i -= 0.1
+            i -= 1
             print(str(i))  # + "\t" + str(utime.monotonic()))
             utime.sleep(0.1)
         relay.value(0)
