@@ -51,18 +51,18 @@ debug_led_btn_porta.value(0)
 debug_led_btn_enc.value(0)
 
 
-def readMode(mode):
-    if mode == 1:
+def read_mode_value(which_mode):
+    if which_mode == 1:
         try:
             value = int(open('./mode1', 'r').read())
         except Exception:
             value = 70
-    elif mode == 2:
+    elif which_mode == 2:
         try:
             value = int(open('./mode2', 'r').read())
         except Exception:
             value = 140
-    elif mode == 3:
+    elif which_mode == 3:
         try:
             value = int(open('./mode3', 'r').read())
         except Exception:
@@ -70,7 +70,7 @@ def readMode(mode):
     else:
         value = None
 
-    print("Value for this mode is: " + str(value))
+    print("Value for mode " + str(which_mode) + " is: " + str(value))
     return value
 
 
@@ -90,7 +90,7 @@ if dip2.value() == 1:
 if mode == 3:
     mode = 0
 print("DIP set to mode " + str(mode))
-mode_value = readMode(mode)
+mode_value = read_mode_value(mode)
 
 # Code so far:
 btn_enc_state = None
@@ -111,10 +111,10 @@ while True:
     if btn_enc.value() == 1 and btn_enc_state == 1:
         if mode < 2:  # No mode 3 as of now
             mode += 1
-            mode_value = readMode(mode)
+            mode_value = read_mode_value(mode)
         else:
             mode = 0
-            mode_value = readMode(mode)
+            mode_value = read_mode_value(mode)
         print("Mode changed to " + str(mode))
         btn_enc_state = None
     if not btn_porta.value() == 1 and btn_porta_state is None:
