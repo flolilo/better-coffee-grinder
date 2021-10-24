@@ -66,7 +66,7 @@ def read_mode_value(which_mode):
         try:
             value = int(open('./mode3', 'r').read())
         except Exception:
-            value = 140
+            value = 170
     else:
         value = None
 
