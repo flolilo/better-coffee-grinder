@@ -2,8 +2,7 @@ import utime
 import machine
 from rotary_irq_rp2 import RotaryIRQ
 import rp2
-print("123")
-
+print("Welcome to BCG!")
 
 # Setting the pins up:
 """ Pinout Sparkfun Pro Micro RP2040 (DEV-17717):
