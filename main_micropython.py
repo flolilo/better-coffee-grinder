@@ -144,14 +144,28 @@ while True:
     if not btn_porta.value() == 1 and btn_porta_state is None:
         btn_porta_state = 1
     if btn_porta.value() == 1 and btn_porta_state == 1:
-        print("Start!")
-        btn_porta_state = None
-        relay.value(1)
-        i = mode_value
-        while i > 0:
-            i -= 1
-            print(str(i))  # + "\t" + str(utime.monotonic()))
-            utime.sleep(0.1)
+        #try:
+        if mode > 0:
+            print("Start!")
+            btn_porta_state = None
+            relay.value(1)
+            i = mode_value
+            while i > 0:
+                i -= 1
+                print(str(i))  # + "\t" + str(utime.monotonic()))
+                utime.sleep(0.1)
+        else:
+            print("Start!")
+            btn_porta_state = None
+            relay.value(1)
+            i = 0
+            while i < 900:
+                i += 1
+                print(str(i))  # + "\t" + str(utime.monotonic()))
+                utime.sleep(0.1)
         relay.value(0)
         print("Done!")
+        #except Exception as e:
+        #    print("ERROR! " + str(e))
+        #    relay.value(0)
         utime.sleep(0.001)
