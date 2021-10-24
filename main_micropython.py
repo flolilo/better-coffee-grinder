@@ -74,6 +74,28 @@ def read_mode_value(which_mode):
     return value
 
 
+def write_mode_value(which_mode, which_mode_value):
+    if which_mode == 1:
+        mode_file = "./mode1"
+    elif which_mode == 2:
+        mode_file = "./mode2"
+    elif which_mode == 3:
+        mode_file = "./mode3"
+    else:
+        return 0
+
+    print("  Writing " + str(which_mode_value) + " to " + str(which_mode))
+
+    try:
+        with open(mode_file, 'w') as f:
+            f.write(str(which_mode_value))
+            f.close()
+    except Exception:
+        return 1
+
+    return 0
+
+
 # Read the DIPs:
 mode = 0
 """ DIP modes:
@@ -110,9 +132,11 @@ while True:
         btn_enc_state = 1
     if btn_enc.value() == 1 and btn_enc_state == 1:
         if mode < 2:  # No mode 3 as of now
+            write_mode_value(mode, mode_value)
             mode += 1
             mode_value = read_mode_value(mode)
         else:
+            write_mode_value(mode, mode_value)
             mode = 0
             mode_value = read_mode_value(mode)
         print("Mode changed to " + str(mode))
