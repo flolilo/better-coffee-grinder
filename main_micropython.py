@@ -1,7 +1,10 @@
 import utime
 import machine
-from rotary_irq_rp2 import RotaryIRQ
-import rp2
+try:
+    from rotary_irq_rp2 import RotaryIRQ
+    import rp2
+except Exception:
+    print("FAIL")
 print("Welcome to BCG!")
 
 # Setting the pins up:
@@ -32,7 +35,7 @@ print("Welcome to BCG!")
 dip1 = machine.Pin(2, machine.Pin.IN)
 dip2 = machine.Pin(3, machine.Pin.IN)
 btn_porta = machine.Pin(4, machine.Pin.IN)
-r = RotaryIRQ(pin_num_clk=5, pin_num_dt=6,
+rotary = RotaryIRQ(pin_num_clk=5, pin_num_dt=6,
               min_val=0, max_val=0)
 btn_enc = machine.Pin(7, machine.Pin.IN)
 
@@ -117,15 +120,22 @@ mode_value = read_mode_value(mode)
 # Code so far:
 btn_enc_state = None
 btn_porta_state = None
-val_old = r.value()
+val_old = rotary.value()
+sane_maximum_times = [1, 450, 900]
 while True:
-    val_new = r.value()
-    if val_old > val_new:
-        mode_value += 1
+    val_new = rotary.value()
+    if mode != 0 and val_old > val_new:
+        if mode_value < sane_maximum_times[mode]:
+            mode_value += 1
+        else:
+            mode_value = 1
         val_old = val_new
         print('Timer:\t', str(mode_value))
-    elif val_old < val_new:
-        mode_value -= 1
+    elif mode != 0 and val_old < val_new:
+        if mode_value > 1:
+            mode_value -= 1
+        else:
+            mode_value = sane_maximum_times[mode]
         val_old = val_new
         print('Timer:\t', str(mode_value))
     if not btn_enc.value() == 1 and btn_enc_state is None:
