@@ -145,19 +145,16 @@ while True:
         btn_porta_state = 1
     if btn_porta.value() == 1 and btn_porta_state == 1:
         #try:
+        print("Start!")
+        btn_porta_state = None
+        relay.value(1)
         if mode > 0:
-            print("Start!")
-            btn_porta_state = None
-            relay.value(1)
             i = mode_value
             while i > 0:
                 i -= 1
                 print(str(i))  # + "\t" + str(utime.monotonic()))
                 utime.sleep(0.1)
         else:
-            print("Start!")
-            btn_porta_state = None
-            relay.value(1)
             i = 0
             while i < 900:
                 i += 1

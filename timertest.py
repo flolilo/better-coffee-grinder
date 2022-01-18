@@ -41,6 +41,7 @@ while True:
     if btn_porta.value() != 1 and btn_porta_state == 0:
         btn_porta_state = 1
         print("BUT-")
+        utime.sleep(0.02)
     if btn_porta.value() == 1 and btn_porta_state == 1:
         btn_porta_state = 0
         print("-TON!")
