@@ -1,4 +1,4 @@
-import utime
+import time
 import machine
 try:
     from rotary_irq_rp2 import RotaryIRQ
@@ -36,7 +36,7 @@ dip1 = machine.Pin(2, machine.Pin.IN)
 dip2 = machine.Pin(3, machine.Pin.IN)
 btn_porta = machine.Pin(4, machine.Pin.IN)
 rotary = RotaryIRQ(pin_num_clk=5, pin_num_dt=6,
-              min_val=0, max_val=0)
+                   min_val=0, max_val=0)
 btn_enc = machine.Pin(7, machine.Pin.IN)
 
 relay = machine.Pin(29, machine.Pin.OUT)
@@ -123,6 +123,7 @@ btn_porta_state = None
 val_old = rotary.value()
 sane_maximum_times = [1, 450, 900]
 while True:
+    # Timer change:
     val_new = rotary.value()
     if mode != 0 and val_old > val_new:
         if mode_value < sane_maximum_times[mode]:
@@ -138,23 +139,26 @@ while True:
             mode_value = sane_maximum_times[mode]
         val_old = val_new
         print('Timer:\t', str(mode_value))
+
+    # Mode change:
     if not btn_enc.value() == 1 and btn_enc_state is None:
         btn_enc_state = 1
-    if btn_enc.value() == 1 and btn_enc_state == 1:
+    elif btn_enc.value() == 1 and btn_enc_state == 1:
         if mode < 2:  # No mode 3 as of now
-            write_mode_value(mode, mode_value)
             mode += 1
             mode_value = read_mode_value(mode)
         else:
-            write_mode_value(mode, mode_value)
             mode = 0
             mode_value = read_mode_value(mode)
         print("Mode changed to " + str(mode))
         btn_enc_state = None
+
+    # Start/Stop:
     if not btn_porta.value() == 1 and btn_porta_state is None:
         btn_porta_state = 1
-    if btn_porta.value() == 1 and btn_porta_state == 1:
-        #try:
+    elif btn_porta.value() == 1 and btn_porta_state == 1:
+        # try:
+        write_mode_value(mode, mode_value)
         print("Start!")
         btn_porta_state = None
         relay.value(1)
@@ -162,17 +166,17 @@ while True:
             i = mode_value
             while i > 0:
                 i -= 1
-                print(str(i))  # + "\t" + str(utime.monotonic()))
-                utime.sleep(0.1)
+                print(str(i))  # + "\t" + str(time.monotonic()))
+                time.sleep(0.1)
         else:
             i = 0
             while i < 900:
                 i += 1
-                print(str(i))  # + "\t" + str(utime.monotonic()))
-                utime.sleep(0.1)
+                print(str(i))  # + "\t" + str(time.monotonic()))
+                time.sleep(0.1)
         relay.value(0)
         print("Done!")
-        #except Exception as e:
+        # except Exception as e:
         #    print("ERROR! " + str(e))
         #    relay.value(0)
-        utime.sleep(0.001)
+        time.sleep(0.001)
