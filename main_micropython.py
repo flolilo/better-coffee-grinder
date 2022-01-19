@@ -60,103 +60,87 @@ debug_led_btn_enc.value(0)
             f.write(str(element) + "\n")
 """
 
-def read_mode_value(which_mode):
-    if which_mode == 1:
-        try:
-            value = int(open('./mode1', 'r').read())
-        except Exception:
-            value = 70
-    elif which_mode == 2:
-        try:
-            value = int(open('./mode2', 'r').read())
-        except Exception:
-            value = 140
-    elif which_mode == 3:
-        try:
-            value = int(open('./mode3', 'r').read())
-        except Exception:
-            value = 170
-    else:
-        value = None
 
-    print("Value for mode " + str(which_mode) + " is: " + str(value))
+def read_mode_values(which_mode):
+    value = []
+    try:
+        with open("./mode_values", "r") as f:
+            for line in f:
+                value.append((int(line.strip())))
+
+        print("Value for mode " + str(which_mode) + " is: " + str(value[which_mode]))
+
+    except Exception as e:
+        print("Error in read_mode_values!!! " + str(e))
+        print("Using fallback values...")
+        # Scales-Mode: add fourth value to list (e.g. 170 for 17.0 g)
+        value = [1, 70, 140]
+
     return value
 
 
-def write_mode_value(which_mode, which_mode_value):
-    if which_mode == 1:
-        mode_file = "./mode1"
-    elif which_mode == 2:
-        mode_file = "./mode2"
-    elif which_mode == 3:
-        mode_file = "./mode3"
-    else:
-        return 0
-
-    print("  Writing " + str(which_mode_value) + " to " + str(which_mode))
-
+def write_mode_values(which_mode_value):
     try:
-        with open(mode_file, 'w') as f:
-            f.write(str(which_mode_value))
-            f.close()
-    except Exception:
-        return 1
+        with open("./mode_values", "w") as f:
+            for element in which_mode_value:
+                f.write(str(element) + "\n")
+
+        print("  Saving values " + str(which_mode_value))
+
+    except Exception as e:
+        print("Error in write_mode_values!!! " + str(e))
 
     return 0
 
 
 # Read the DIPs:
-mode = 0
 """ DIP modes:
     OFF/OFF 0   manual
     ON/OFF  1   single
     OFF/ON  2   double
-    ON/ON   3   manual (TODO: weight)
+    ON/ON   3   manual (NOT IMPLEMENTED: weight)
 """
-if dip1.value() == 1:
-    mode += 1
-if dip2.value() == 1:
-    mode += 2
-# No mode 3 as of now, so 3=0:
-if mode == 3:
-    mode = 0
-print("DIP set to mode " + str(mode))
-mode_value = read_mode_value(mode)
+current_mode = 0 + dip1.value() + (2 * dip2.value())
+# No mode 3 (proposed for using scales) as of now, so 3=0:
+if current_mode == 3:
+    current_mode = 0
+print("DIP set to mode " + str(current_mode))
+mode_values = read_mode_values(current_mode)
 
 # Code so far:
 btn_enc_state = None
 btn_porta_state = None
 val_old = rotary.value()
-sane_maximum_times = [1, 450, 900]
+# Scales-Mode: Add fourth value (e.g. 500 for 50.0 g)
+sane_maximum_times = [None, 450, 900]
 while True:
     # Timer change:
     val_new = rotary.value()
-    if mode != 0 and val_old > val_new:
-        if mode_value < sane_maximum_times[mode]:
-            mode_value += 1
+    if current_mode != 0 and val_old > val_new:
+        if mode_values[current_mode] < sane_maximum_times[current_mode]:
+            mode_values[current_mode] += 1
         else:
-            mode_value = 1
+            mode_values[current_mode] = 1
         val_old = val_new
-        print('Timer:\t', str(mode_value))
-    elif mode != 0 and val_old < val_new:
-        if mode_value > 1:
-            mode_value -= 1
+        print('Timer:\t', str(mode_values[current_mode]))
+    elif current_mode != 0 and val_old < val_new:
+        if mode_values[current_mode] > 1:
+            mode_values[current_mode] -= 1
         else:
-            mode_value = sane_maximum_times[mode]
+            mode_values[current_mode] = sane_maximum_times[current_mode]
         val_old = val_new
-        print('Timer:\t', str(mode_value))
+        print('Timer:\t', str(mode_values[current_mode]))
 
     # Mode change:
     if not btn_enc.value() == 1 and btn_enc_state is None:
         btn_enc_state = 1
     elif btn_enc.value() == 1 and btn_enc_state == 1:
-        if mode < 2:  # No mode 3 as of now
-            mode += 1
-            mode_value = read_mode_value(mode)
+        if current_mode < 2:  # No mode 3 as of now
+            current_mode += 1
         else:
-            mode = 0
-            mode_value = read_mode_value(mode)
-        print("Mode changed to " + str(mode))
+            current_mode = 0
+        print("Mode changed to " + str(current_mode))
+        mode_values = read_mode_values(current_mode)
         btn_enc_state = None
 
     # Start/Stop:
@@ -164,12 +148,12 @@ while True:
         btn_porta_state = 1
     elif btn_porta.value() == 1 and btn_porta_state == 1:
         # try:
-        write_mode_value(mode, mode_value)
+        write_mode_values(mode_values)
         print("Start!")
         btn_porta_state = None
         relay.value(1)
-        if mode > 0:
-            i = mode_value
+        if current_mode > 0:
+            i = mode_values[current_mode]
             while i > 0:
                 i -= 1
                 print(str(i))  # + "\t" + str(time.monotonic()))
