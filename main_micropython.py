@@ -53,6 +53,12 @@ debug_led_dip2.value(0)
 debug_led_btn_porta.value(0)
 debug_led_btn_enc.value(0)
 
+""" DEBUG: if ./mode_values gets ruined, uncomment this code for one runtime:
+    which_mode_value = [1, 70, 140]
+    with open("./mode_values", "w") as f:
+        for element in which_mode_value:
+            f.write(str(element) + "\n")
+"""
 
 def read_mode_value(which_mode):
     if which_mode == 1:
