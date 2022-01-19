@@ -9,8 +9,8 @@ import machine
 try:
     from rotary_irq_rp2 import RotaryIRQ
     import rp2
-except Exception:
-    print("FAIL")
+except Exception as e:
+    print("Import failed!!! " + str(e))
 print("Welcome to BCG!")
 
 # Setting the pins up:
@@ -41,8 +41,7 @@ print("Welcome to BCG!")
 dip1 = machine.Pin(2, machine.Pin.IN)
 dip2 = machine.Pin(3, machine.Pin.IN)
 btn_porta = machine.Pin(4, machine.Pin.IN)
-rotary = RotaryIRQ(pin_num_clk=5, pin_num_dt=6,
-                   min_val=0, max_val=0)
+rotary = RotaryIRQ(pin_num_clk=5, pin_num_dt=6, min_val=0, max_val=0)
 btn_enc = machine.Pin(7, machine.Pin.IN)
 
 relay = machine.Pin(29, machine.Pin.OUT)
@@ -106,8 +105,8 @@ def write_mode_values(which_mode_value):
     OFF/ON  2   double
     ON/ON   3   manual (NOT IMPLEMENTED: weight)
 """
-current_mode = 0 + dip1.value() + (2 * dip2.value())
-# No mode 3 (proposed for using scales) as of now, so 3=0:
+current_mode = dip1.value() + (2 * dip2.value())
+# No mode 3 (proposed for using scales) as of now, so 3 = 0:
 if current_mode == 3:
     current_mode = 0
 print("DIP set to mode " + str(current_mode))
