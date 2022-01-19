@@ -1,3 +1,9 @@
+# SPDX-License-Identifier: GPL-3.0-only
+"""better-coffee-grinder - For a better coffee grinder experience"""
+__author__ = "flolilo"
+__license__ = "See SPDX-License-Identifier"
+__contact__ = "See github.com/flolilo/better-coffee-grinder"
+__version__ = "0.1-ALPHA"
 import time
 import machine
 try:
