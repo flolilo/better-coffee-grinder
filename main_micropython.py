@@ -51,6 +51,8 @@ debug_led_dip2 = machine.Pin(27, machine.Pin.OUT)
 debug_led_btn_porta = machine.Pin(28, machine.Pin.OUT)
 debug_led_btn_enc_pause = machine.Pin(8, machine.Pin.OUT)
 
+timer = machine.Timer()
+
 # maybe comment these out for final version?
 relay.value(0)
 debug_led_dip1.value(dip1.value())
@@ -98,6 +100,11 @@ def write_mode_values(which_mode_value):
     return 0
 
 
+def handle_interrupt(timer):
+    global counter_fresh_interrupts
+    counter_fresh_interrupts += 1
+
+
 # Read the DIPs:
 """ DIP modes:
     OFF/OFF 0   manual
@@ -117,20 +124,36 @@ btn_enc_state = None
 btn_porta_state = None
 val_old = rotary.value()
 # Scales-Mode: Add fourth value (e.g. 500 for 50.0 g)
-sane_maximum_times = [None, 450, 900]
+# First is in fact used for manual mode and should be the maximum time the grinder's motor
+# may run continuously. E.g. the sticker on the Eureka Mignon MCI says
+sane_maximum_times = [900, 450, 900]
+# Denominator for timers, e.g. a value of ten means one tenth of a second. Must be integer.
+# Check variables granularity, sane_maximum_times and mode_values if you change this!
+timer_denominator = 10
+# Granularity for values: values are 1/10 of their value (e.g. 17.0g is 170, 12.5s is 125)
+# Higher values make for faster, coarser changes. Must be integer - in case you need finer
+# values, change variable timer_denominator to higher value (e.g. 100)
+granularity = 1
+# Time until pausing results in abortion of operation. Also in tenths of seconds.
+time_pause = 70
+
+counter_fresh_interrupts = 0
+timer.init(freq=timer_denominator, mode=timer.PERIODIC, callback=handle_interrupt)
+
+# Perma-Loop
 while True:
     # Timer change:
     val_new = rotary.value()
     if current_mode != 0 and val_old > val_new:
         if mode_values[current_mode] < sane_maximum_times[current_mode]:
-            mode_values[current_mode] += 1
+            mode_values[current_mode] += granularity
         else:
             mode_values[current_mode] = 1
         val_old = val_new
         print('Timer:\t', str(mode_values[current_mode]))
     elif current_mode != 0 and val_old < val_new:
         if mode_values[current_mode] > 1:
-            mode_values[current_mode] -= 1
+            mode_values[current_mode] -= granularity
         else:
             mode_values[current_mode] = sane_maximum_times[current_mode]
         val_old = val_new
@@ -142,8 +165,11 @@ while True:
     elif btn_enc.value() == 1 and btn_enc_state == 1:
         if current_mode < 2:  # No mode 3 as of now
             current_mode += 1
+            debug_led_btn_porta.value(0)
         else:
             current_mode = 0
+            debug_led_btn_porta.value(1)
+
         print("Mode changed to " + str(current_mode))
         mode_values = read_mode_values(current_mode)
         btn_enc_state = None
@@ -152,26 +178,103 @@ while True:
     if not btn_porta.value() == 1 and btn_porta_state is None:
         btn_porta_state = 1
     elif btn_porta.value() == 1 and btn_porta_state == 1:
+        # Logic:
+        # If Porta button pressed once: Start timer, run until timer runs out via -1
+        # If porta button is pressed again: delete timer, run until timer runs out via -1
         # try:
-        write_mode_values(mode_values)
-        print("Start!")
-        btn_porta_state = None
         relay.value(1)
+        btn_porta_state = None
+        write_mode_values(mode_values)
+        counter_fresh_interrupts = 0
+        print("Start grinding!")
+        time.sleep_ms(150)
+
+        # Timer modes:
         if current_mode > 0:
             i = mode_values[current_mode]
+            # Double-break!  CREDIT: stackoverflow.com/a/6564670
+            double_breaker = False
             while i > 0:
-                i -= 1
-                print(str(i))  # + "\t" + str(time.monotonic()))
-                time.sleep(0.1)
+                if counter_fresh_interrupts > 0:
+                    state = machine.disable_irq()
+                    counter_fresh_interrupts -= 1
+                    machine.enable_irq(state)
+                    i -= 1
+                    print("  |>  " + str(i))  # + "\t" + str(time.monotonic()))
+                if not btn_porta.value() == 1 and btn_porta_state is None:
+                    btn_porta_state = 1
+                elif btn_porta.value() == 1 and btn_porta_state == 1:
+                    relay.value(0)
+                    btn_porta_state = None
+                    counter_fresh_interrupts = 0
+                    counter_pause_interrupts = 0
+                    debug_led_btn_enc_pause.value(1)
+                    print("Pause grinding")
+                    time.sleep_ms(150)
+                    while True:
+                        if counter_fresh_interrupts > 0:
+                            state = machine.disable_irq()
+                            counter_fresh_interrupts -= 1
+                            machine.enable_irq(state)
+                            counter_pause_interrupts += 1
+                            print("  ||  " + str(counter_pause_interrupts))
+                        if btn_porta.value():
+                            print("Pause ended")
+                            relay.value(1)
+                            break
+                        if counter_pause_interrupts >= time_pause:
+                            print("Abort (pause timed out)")
+                            double_breaker = True
+                            break
+                    debug_led_btn_enc_pause.value(0)
+                if double_breaker:
+                    relay.value(0)
+                    break
+        # Manual mode:
         else:
             i = 0
-            while i < 900:
-                i += 1
-                print(str(i))  # + "\t" + str(time.monotonic()))
-                time.sleep(0.1)
+            # Double-break!  CREDIT: stackoverflow.com/a/6564670
+            double_breaker = False
+            while i < sane_maximum_times[current_mode]:
+                if counter_fresh_interrupts > 0:
+                    state = machine.disable_irq()
+                    counter_fresh_interrupts -= 1
+                    machine.enable_irq(state)
+                    i += 1
+                    print("  |>  " + str(i))  # + "\t" + str(time.monotonic()))
+                if not btn_porta.value() == 1 and btn_porta_state is None:
+                    btn_porta_state = 1
+                elif btn_porta.value() == 1 and btn_porta_state == 1:
+                    relay.value(0)
+                    btn_porta_state = None
+                    counter_fresh_interrupts = 0
+                    counter_pause_interrupts = 0
+                    debug_led_btn_enc_pause.value(1)
+                    print("Pause grinding")
+                    time.sleep_ms(150)
+                    while True:
+                        if counter_fresh_interrupts > 0:
+                            state = machine.disable_irq()
+                            counter_fresh_interrupts -= 1
+                            machine.enable_irq(state)
+                            counter_pause_interrupts += 1
+                            print("  ||  " + str(counter_pause_interrupts))
+                        if btn_porta.value():
+                            print("Pause ended")
+                            relay.value(1)
+                            break
+                        if counter_pause_interrupts >= time_pause:
+                            print("Abort (pause timed out)")
+                            double_breaker = True
+                            break
+                    debug_led_btn_enc_pause.value(0)
+                if double_breaker:
+                    relay.value(0)
+                    break
         relay.value(0)
-        print("Done!")
+        print("Done grinding!")
+        debug_led_btn_porta.value(0)
         # except Exception as e:
         #    print("ERROR! " + str(e))
         #    relay.value(0)
-        time.sleep(0.001)
+    time.sleep_ms(1)
