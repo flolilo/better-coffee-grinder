@@ -9,6 +9,7 @@ import machine
 try:
     from rotary_irq_rp2 import RotaryIRQ
     import rp2
+    import ssd1306
 except Exception as e:
     print("Import failed!!! " + str(e))
 print("Welcome to BCG!")
@@ -44,6 +45,9 @@ btn_porta = machine.Pin(4, machine.Pin.IN)
 rotary = RotaryIRQ(pin_num_clk=5, pin_num_dt=6, min_val=0, max_val=0)
 btn_enc = machine.Pin(7, machine.Pin.IN)
 relay = machine.Pin(29, machine.Pin.OUT)
+i2c = machine.I2C(id=0, sda=machine.Pin(16), scl=machine.Pin(17), freq=40000)
+# print(str(i2c.scan()))
+display = ssd1306.SSD1306_I2C(width=128, height=64, i2c=i2c, addr=0x3D)
 # maybe comment these out for final version?
 debug_led_dip1 = machine.Pin(26, machine.Pin.OUT)
 debug_led_dip2 = machine.Pin(27, machine.Pin.OUT)
@@ -63,6 +67,13 @@ timer = machine.Timer()
         for element in which_mode_value:
             f.write(str(element) + "\n")
 """
+
+# FIRST TRY OF OLED:
+display.text('Welcome to BCG!', 0, 0, 1)
+display.show()
+display.poweron()
+time.sleep(5)
+display.poweroff()
 
 
 def read_mode_values(which_mode):
