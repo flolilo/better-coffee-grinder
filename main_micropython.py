@@ -23,9 +23,9 @@ print("Welcome to BCG!")
     4       -           Button Portafilter
     5       -           Encoder A
     6       -           Encoder B
-    7       -           Button Encoder
-    8       UART TX1    Debug: LED Encoder
-    9       UART RX1    Debug: LED Button Encoder
+    7       -           Button Encoder; LED manual mode
+    8       UART TX1    Debug: LED Encoder; LED Pause
+    9       UART RX1    -
     16      Qwiic SDA   Qwiic OLED
     17      Qwiic SCL   Qwiic OLED
     20      SPI CIPO    -
@@ -49,14 +49,14 @@ relay = machine.Pin(29, machine.Pin.OUT)
 debug_led_dip1 = machine.Pin(26, machine.Pin.OUT)
 debug_led_dip2 = machine.Pin(27, machine.Pin.OUT)
 debug_led_btn_porta = machine.Pin(28, machine.Pin.OUT)
-debug_led_btn_enc = machine.Pin(29, machine.Pin.OUT)
+debug_led_btn_enc_pause = machine.Pin(8, machine.Pin.OUT)
 
-# maybe delete these for final version?
+# maybe comment these out for final version?
 relay.value(0)
-debug_led_dip1.value(0)
-debug_led_dip2.value(0)
+debug_led_dip1.value(dip1.value())
+debug_led_dip2.value(dip2.value())
 debug_led_btn_porta.value(0)
-debug_led_btn_enc.value(0)
+debug_led_btn_enc_pause.value(0)
 
 """ DEBUG: if ./mode_values gets ruined, uncomment this code for one runtime:
     which_mode_value = [1, 70, 140]
