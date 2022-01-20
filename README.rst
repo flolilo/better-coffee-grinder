@@ -40,24 +40,24 @@ Proposed features
 
 - Rotary encoder to adjust timing (rotate) / change mode (push)
 
-- *Best case*: Grinding in all modes can be paused by clicking the start/stop switch (auto-reset
+- Grinding in all modes can be paused by clicking the start/stop switch (auto-reset
   after a few seconds)
 
 - OLED display that shows time and mode
 
-  - Auto-standby for display (switch off or screen saver)
+  - *Best case*: Auto-standby for display (switch off or screen saver)
 
 
 Details
 =======
 
-As of now, I plan to use a RP2040-based Microcontroller.
+As of now, I use a RP2040-based Microcontroller.
 
-Pull-ups and de-bouncing are done with dedicated hardware - you can probably get away with adding
-``utime.sleep()`` and of course µC-internal pull-ups, but parts are cheap and soldering is fun. ;-)
+Pull-ups and de-bouncing are done with dedicated hardware - you can probably get away with using
+µC-internal pull-ups, but parts are cheap and soldering is fun. ;-)
 
-I plan to use either Micro- or CircuitPython, though all of this might still change; I will have to
-do some proof of concept before deciding.
+Currently, all is implemented with MicroPython - CircuitPython, at least some versions ago,
+didn't play nice with the hardware timers.
 
 
 Parts
