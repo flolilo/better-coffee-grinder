@@ -43,25 +43,22 @@ dip2 = machine.Pin(3, machine.Pin.IN)
 btn_porta = machine.Pin(4, machine.Pin.IN)
 rotary = RotaryIRQ(pin_num_clk=5, pin_num_dt=6, min_val=0, max_val=0)
 btn_enc = machine.Pin(7, machine.Pin.IN)
-
 relay = machine.Pin(29, machine.Pin.OUT)
-
+# maybe comment these out for final version?
 debug_led_dip1 = machine.Pin(26, machine.Pin.OUT)
 debug_led_dip2 = machine.Pin(27, machine.Pin.OUT)
 debug_led_btn_porta = machine.Pin(28, machine.Pin.OUT)
 debug_led_btn_enc_pause = machine.Pin(8, machine.Pin.OUT)
-
-timer = machine.Timer()
-
-# maybe comment these out for final version?
-relay.value(0)
 debug_led_dip1.value(dip1.value())
 debug_led_dip2.value(dip2.value())
 debug_led_btn_porta.value(0)
 debug_led_btn_enc_pause.value(0)
 
+relay.value(0)
+timer = machine.Timer()
+
 """ DEBUG: if ./mode_values gets ruined, uncomment this code for one runtime:
-    which_mode_value = [1, 70, 140]
+    which_mode_value = [900, 70, 140]
     with open("./mode_values", "w") as f:
         for element in which_mode_value:
             f.write(str(element) + "\n")
@@ -113,30 +110,34 @@ def handle_interrupt(timer):
     ON/ON   3   manual (NOT IMPLEMENTED: weight)
 """
 current_mode = dip1.value() + (2 * dip2.value())
-# No mode 3 (proposed for using scales) as of now, so 3 = 0:
 if current_mode == 3:
     current_mode = 0
 print("DIP set to mode " + str(current_mode))
+
+# Denominator for timers, e.g. a value of ten means one tenth of a second. Must be integer.
+#   Check variables granularity, sane_maximum_times and mode_values if you change this!
+timer_denominator = 10
+# Sane maximum times for your machine in 1/timer_denominator secs.
+#   - Scales-Mode: Add fourth value (e.g. 500 for 50.0 g)
+#   - First is in fact used for manual mode and should be the maximum time the grinder's motor
+#     may run continuously. E.g. the sticker on the Eureka Mignon MCI says
+sane_maximum_times = [900, 450, 900]
+# Time until pausing results in abortion of operation. Also in 1/timer_denominator secs.
+time_pause = 70
+# Granularity for encoder
+#   Higher values make for faster, coarser changes. Must be integer - in case you need finer
+#     values, change variable timer_denominator to higher value (e.g. 100)
+granularity = 1
+
+# Read saved values for modes:
 mode_values = read_mode_values(current_mode)
 
-# Code so far:
+# Preparing variables for buttons:
 btn_enc_state = None
 btn_porta_state = None
 val_old = rotary.value()
-# Scales-Mode: Add fourth value (e.g. 500 for 50.0 g)
-# First is in fact used for manual mode and should be the maximum time the grinder's motor
-# may run continuously. E.g. the sticker on the Eureka Mignon MCI says
-sane_maximum_times = [900, 450, 900]
-# Denominator for timers, e.g. a value of ten means one tenth of a second. Must be integer.
-# Check variables granularity, sane_maximum_times and mode_values if you change this!
-timer_denominator = 10
-# Granularity for values: values are 1/10 of their value (e.g. 17.0g is 170, 12.5s is 125)
-# Higher values make for faster, coarser changes. Must be integer - in case you need finer
-# values, change variable timer_denominator to higher value (e.g. 100)
-granularity = 1
-# Time until pausing results in abortion of operation. Also in tenths of seconds.
-time_pause = 70
 
+# Starting the hardware timer:
 counter_fresh_interrupts = 0
 timer.init(freq=timer_denominator, mode=timer.PERIODIC, callback=handle_interrupt)
 
@@ -178,9 +179,6 @@ while True:
     if not btn_porta.value() == 1 and btn_porta_state is None:
         btn_porta_state = 1
     elif btn_porta.value() == 1 and btn_porta_state == 1:
-        # Logic:
-        # If Porta button pressed once: Start timer, run until timer runs out via -1
-        # If porta button is pressed again: delete timer, run until timer runs out via -1
         # try:
         relay.value(1)
         btn_porta_state = None
