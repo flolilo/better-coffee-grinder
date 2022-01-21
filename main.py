@@ -15,7 +15,7 @@ except Exception as e:
     print("Import failed!!! " + str(e))
 print("Welcome to BCG!")
 
-# Setting the pins up:
+# ? Setting the pins up:
 """ Pinout Sparkfun Pro Micro RP2040 (DEV-17717):
     <GPIO#> <Alt-Fn>    <Use>
     0       UART TX0    -
@@ -47,15 +47,15 @@ try:
     rotary = RotaryIRQ(pin_num_clk=5, pin_num_dt=6, min_val=0, range_mode=RotaryIRQ.RANGE_UNBOUNDED)
     btn_enc = machine.Pin(7, machine.Pin.IN)
     relay = machine.Pin(29, machine.Pin.OUT)
-    # I2C (Qwiic) for OLED. NOTE: github.com/micropython/micropython/issues/8167
-    # Use only one of these!
+    # ? I2C (Qwiic) for OLED. NOTE: github.com/micropython/micropython/issues/8167
+    # * Use only one of these!
     i2c = machine.SoftI2C(sda=machine.Pin(16), scl=machine.Pin(17), freq=100000)
     # i2c = machine.I2C(id=0, sda=machine.Pin(16), scl=machine.Pin(17), freq=100000)
-    # Just to find your OLED's address (typically 0x3C or 0x3D) :
+    # ? Just to find your OLED's address (typically 0x3C or 0x3D) :
     # print(str(i2c.scan()))
-    # Define the display
+    # ? Define the display
     display = ssd1306.SSD1306_I2C(width=128, height=64, i2c=i2c, addr=0x3D)
-    # maybe comment these out for final version?
+    # ! maybe comment these out for final version?
     debug_led_dip1 = machine.Pin(26, machine.Pin.OUT)
     debug_led_dip2 = machine.Pin(27, machine.Pin.OUT)
     debug_led_btn_porta = machine.Pin(28, machine.Pin.OUT)
@@ -81,8 +81,7 @@ timer_display = machine.Timer()
             f.write(str(element) + "\n")
 """
 
-# FIRST TRY OF OLED:
-display.text('Welcome to BCG!', 0, 25, 1)
+display.text('Welcome to BCG!\n', 0, 25, 1)
 display.show()
 
 
@@ -98,7 +97,7 @@ def read_mode_values(which_mode):
     except Exception as e:
         print("Error in read_mode_values!!! " + str(e))
         print("Using fallback values...")
-        # Scales-Mode: add fourth value to list (e.g. 170 for 17.0 g)
+        # ! Scales-Mode: add fourth value to list (e.g. 170 for 17.0 g)
         value = [1, 70, 140]
 
     return value
@@ -143,7 +142,7 @@ def btn_encoder_IR_handle(_):
     encoder_btn_IR_counter += 1
 
 
-# Read the DIPs:
+# ? Read the DIPs:
 """ DIP modes:
     OFF/OFF 0   manual
     ON/OFF  1   single
@@ -153,21 +152,21 @@ def btn_encoder_IR_handle(_):
 current_mode = dip1.value() + (2 * dip2.value())
 if current_mode == 3:
     current_mode = 0
-print("DIP set to mode " + str(current_mode))
+print("DIPs set to mode\t" + str(current_mode))
 
-# Denominator for timers, e.g. a value of ten means one tenth of a second. Must be integer.
-#   Check variables granularity, sane_maximum_times and mode_values if you change this!
+# * Denominator for timers, e.g. a value of ten means one tenth of a second. Must be integer.
+# *   Check variables granularity, sane_maximum_times and mode_values if you change this!
 timer_denominator = 10
-# Sane maximum times for your machine in 1/timer_denominator secs.
-#   - Scales-Mode: Add fourth value (e.g. 500 for 50.0 g)
-#   - First is in fact used for manual mode and should be the maximum time the grinder's motor
-#     may run continuously. E.g. the sticker on the Eureka Mignon MCI says
+# * Sane maximum times for your machine in 1/timer_denominator secs.
+# *   - Scales-Mode: Add fourth value (e.g. 500 for 50.0 g)
+# *   - First is in fact used for manual mode and should be the maximum time the grinder's motor
+# *     may run continuously. E.g. the sticker on the Eureka Mignon MCI says
 sane_maximum_times = [900, 450, 900]
-# Time until pausing results in abortion of operation. Also in 1/timer_denominator secs.
+# * Time until pausing results in abortion of operation. Also in 1/timer_denominator secs.
 time_pause = 70
-# Granularity for encoder
-#   Higher values make for faster, coarser changes. Must be integer - in case you need finer
-#     values, change variable timer_denominator to higher value (e.g. 100)
+# * Granularity for encoder
+# *   Higher values make for faster, coarser changes. Must be integer - in case you need finer
+# *     values, change variable timer_denominator to higher value (e.g. 100)
 granularity = 1
 
 fb_coffee_bean = framebuf.FrameBuffer(bytearray(b'\x00~\x00\x00\xc3\x00\x01\x99\x80\x03\x08\xc0\x06'
@@ -182,12 +181,12 @@ fb_manual = framebuf.FrameBuffer(bytearray(b'\x00\x00\x00p\x00\x0ex\x00\x1e|\x00
                                            b'\x06`\x00\x06`\x00\x06`\x00\x06`\x00\x06\x00\x00\x00'),
                                            24, 24, framebuf.MONO_HLSB)
 
-# Read saved values for modes:
+# * Read saved values for modes:
 mode_values = read_mode_values(current_mode)
 
 rot_val_old = rotary.value()
 
-# Starting the hardware timer:
+# * Starting the hardware timer:
 grind_counter_interrupts = 0
 timer_grind.init(freq=timer_denominator, mode=timer_grind.PERIODIC, callback=timer_grind_IR_handle)
 # disp_counter_interrupts = 0
@@ -197,12 +196,12 @@ btn_porta.irq(handler=btn_porta_IR_handle, trigger=machine.Pin.IRQ_RISING, hard=
 encoder_btn_IR_counter = 0
 btn_enc.irq(handler=btn_encoder_IR_handle, trigger=machine.Pin.IRQ_RISING, hard=False)
 
-# Variable to stop permanent screen re-drawing. Spawned as True so it refreshes on first loop.
+# * Variable to stop permanent screen re-drawing. Spawned as True so it refreshes on first loop.
 refresh_display = True
 
-# Perma-Loop
+# ? Perma-Loop
 while True:
-    # Timer change:
+    # ? Timer change:
     rot_val_new = rotary.value()
     if current_mode != 0 and rot_val_old != rot_val_new:
         if 1 < mode_values[current_mode] < sane_maximum_times[current_mode]:
@@ -215,9 +214,9 @@ while True:
         rot_val_old = rot_val_new
         refresh_display = True
 
-    # Mode change:
+    # ? Mode change:
     if encoder_btn_IR_counter > 0:
-        if current_mode < 2:  # No mode 3 as of now
+        if current_mode < 2:  # ! No mode 3 as of now
             current_mode += 1
             debug_led_btn_porta.value(0)
         else:
@@ -229,7 +228,8 @@ while True:
         refresh_display = True
         encoder_btn_IR_counter = 0
 
-    # Start/Stop:
+    # ? Start/Stop:
+    # TODO: Deduplicate mode 0 and modes !0
     if porta_btn_IR_counter > 0:
         # try:
         relay.value(1)
@@ -239,10 +239,10 @@ while True:
         print("Start grinding!")
         porta_btn_IR_counter = 0
 
-        # Timer modes:
+        # ? Timer modes:
         if current_mode > 0:
             i = mode_values[current_mode]
-            # Double-break!  CREDIT: stackoverflow.com/a/6564670
+            # * Double-break!  CREDIT: stackoverflow.com/a/6564670
             double_breaker = False
             while i > 0:
                 if grind_counter_interrupts > 0:
@@ -286,10 +286,10 @@ while True:
                 if double_breaker:
                     relay.value(0)
                     break
-        # Manual mode:
+        # ? Manual mode:
         else:
             i = 0
-            # Double-break!  CREDIT: stackoverflow.com/a/6564670
+            # * Double-break!  CREDIT: stackoverflow.com/a/6564670
             double_breaker = False
             while i < sane_maximum_times[current_mode]:
                 if grind_counter_interrupts > 0:
