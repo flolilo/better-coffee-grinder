@@ -185,16 +185,11 @@ fb_manual = framebuf.FrameBuffer(bytearray(b'\x00\x00\x00p\x00\x0ex\x00\x1e|\x00
 # Read saved values for modes:
 mode_values = read_mode_values(current_mode)
 
-# Preparing variables for buttons:
-btn_enc_state = None
-btn_porta_state = None
 rot_val_old = rotary.value()
 
 # Starting the hardware timer:
 grind_counter_interrupts = 0
 timer_grind.init(freq=timer_denominator, mode=timer_grind.PERIODIC, callback=timer_grind_IR_handle)
-btnhyst_counter_interrupts = 0
-timer_button_hyst.init(freq=timer_denominator, mode=timer_button_hyst.PERIODIC, callback=timer_button_hyst_IR_handle)
 # disp_counter_interrupts = 0
 # timer_display.init(freq=timer_denominator, mode=timer_display.PERIODIC, callback=timer_display_IR_handle)
 porta_btn_IR_counter = 0
@@ -248,7 +243,7 @@ while True:
         write_mode_values(mode_values)
         grind_counter_interrupts = 0
         print("Start grinding!")
-        btnhyst_counter_interrupts = 0
+        porta_btn_IR_counter = 0
 
         # Timer modes:
         if current_mode > 0:
@@ -268,12 +263,10 @@ while True:
                     display.show()
                 if porta_btn_IR_counter > 0:
                     relay.value(0)
-                    btn_porta_state = None
                     grind_counter_interrupts = 0
                     counter_pause_interrupts = 0
                     debug_led_btn_enc_pause.value(1)
                     print("Pause grinding")
-                    btnhyst_counter_interrupts = 0
                     porta_btn_IR_counter = 0
                     while True:
                         if grind_counter_interrupts > 0:
@@ -315,17 +308,13 @@ while True:
                     display.text("GRIND", 0, 0, 1)
                     display.text(str(i), 0, 48, 1)
                     display.show()
-                if not btn_porta.value() == 1 and btn_porta_state is None and btnhyst_counter_interrupts > 2:
-                    btn_porta_state = 1
-                    btnhyst_counter_interrupts = 0
-                elif btn_porta.value() == 1 and btn_porta_state == 1 and btnhyst_counter_interrupts > 2:
+                if porta_btn_IR_counter > 0:
                     relay.value(0)
-                    btn_porta_state = None
                     grind_counter_interrupts = 0
                     counter_pause_interrupts = 0
                     debug_led_btn_enc_pause.value(1)
                     print("Pause grinding")
-                    btnhyst_counter_interrupts = 0
+                    porta_btn_IR_counter = 0
                     while True:
                         if grind_counter_interrupts > 0:
                             state = machine.disable_irq()
@@ -337,8 +326,9 @@ while True:
                             display.text("PAUSE", 0, 0, 1)
                             display.text(str(grind_counter_interrupts), 0, 48, 1)
                             display.show()
-                        if btn_porta.value():
+                        if porta_btn_IR_counter > 0:
                             print("Pause ended")
+                            porta_btn_IR_counter = 0
                             relay.value(1)
                             break
                         if counter_pause_interrupts >= time_pause:
