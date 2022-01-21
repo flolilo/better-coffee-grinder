@@ -6,10 +6,10 @@ __contact__ = "See github.com/flolilo/better-coffee-grinder"
 __version__ = "0.1-ALPHA"
 try:
     import time
+    import rp2
     import machine
     from rotary_irq_rp2 import RotaryIRQ
-    import rp2
-    import ssd1306
+    from ssd1306 import SSD1306_I2C
     import framebuf
 except Exception as e:
     print("Import failed!!! " + str(e))
@@ -54,7 +54,10 @@ try:
     # ? Just to find your OLED's address (typically 0x3C or 0x3D) :
     # print(str(i2c.scan()))
     # ? Define the display
-    display = ssd1306.SSD1306_I2C(width=128, height=64, i2c=i2c, addr=0x3D)
+    display = SSD1306_I2C(width=128, height=64, i2c=i2c, addr=0x3D)
+    display.rotate(True)
+    display.invert(0)
+    display.contrast(0)
     # ! maybe comment these out for final version?
     debug_led_dip1 = machine.Pin(26, machine.Pin.OUT)
     debug_led_dip2 = machine.Pin(27, machine.Pin.OUT)
@@ -164,6 +167,7 @@ time_pause = 70
 # *     values, change variable timer_denominator to higher value (e.g. 100)
 granularity = 1
 
+# * Logos as framebuffers:
 fb_coffee_bean = framebuf.FrameBuffer(bytearray(b'\x00~\x00\x00\xc3\x00\x01\x99\x80\x03\x08\xc0\x06'
                                                 b'\x0c`\x0c\x040\x0c\x040\x18\x04\x18\x18\x04\x18'
                                                 b'\x18\x04\x180\x0c\x0c0\x18\x0c0\x10\x0c0\x10\x0c0'
@@ -185,7 +189,8 @@ rot_val_old = rotary.value()
 grind_timer_IRQs = 0
 timer_grind.init(freq=timer_denominator, mode=timer_grind.PERIODIC, callback=irq_handle_timer_grind)
 disp_timer_IRQs = 0
-timer_display.init(freq=timer_denominator, mode=timer_display.PERIODIC, callback=irq_handle_timer_display)
+timer_display.init(freq=1, mode=timer_display.PERIODIC, callback=irq_handle_timer_display)
+# * IRQ for buttons:
 porta_btn_IRQs = 0
 btn_porta.irq(handler=irq_handle_btn_porta, trigger=machine.Pin.IRQ_RISING, hard=False)
 encoder_btn_IRQs = 0
@@ -227,6 +232,7 @@ while True:
     # TODO: Deduplicate mode 0 and modes !0
     if porta_btn_IRQs > 0:
         # try:
+        display.poweron()
         relay.value(1)
         btn_porta_state = None
         write_mode_values(mode_values)
@@ -346,7 +352,13 @@ while True:
             display.text(str(current_mode), 0, 0, 1)
             display.text(str(mode_values[current_mode]), 0, 48, 1)
             display.show()
+            display.poweron()
+            disp_timer_IRQs = 0
         except Exception as e:
             print("LCD error - " + str(e))
         refresh_display = False
+    elif not refresh_display and disp_timer_IRQs > 900:
+        print("LCD standby...")
+        display.poweroff()
+        disp_timer_IRQs = 0
     time.sleep_us(100)
