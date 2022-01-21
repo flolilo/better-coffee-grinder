@@ -142,3 +142,7 @@ diagram/bcg*
 diagram/part*
 diagram/png*
 /mode_values
+
+# Logo files
+*.pbm
+*.bmp
