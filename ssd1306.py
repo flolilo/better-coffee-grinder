@@ -1,10 +1,12 @@
-# MicroPython SSD1306 OLED driver, I2C and SPI interfaces
+"""MicroPython SSD1306 OLED driver, I2C and SPI interfaces"""
+__authors__ = "The fine people who created, maintain and improve MicroPython."
+__license__ = "Currently: MIT. See github.com/micropython/micropython/blob/master/LICENSE"
+__contact__ = "micropython.org/contact/"
+__version__ = "2021-06-17, commit bc7822d"
 # SOURCE: github.com/micropython/micropython/blob/master/drivers/display/ssd1306.py
-# VERSION: 2021-06-17, commit bc7822d
 
 from micropython import const
 import framebuf
-
 
 # register definitions
 SET_CONTRAST = const(0x81)
@@ -25,6 +27,7 @@ SET_DISP_CLK_DIV = const(0xD5)
 SET_PRECHARGE = const(0xD9)
 SET_VCOM_DESEL = const(0xDB)
 SET_CHARGE_PUMP = const(0x8D)
+
 
 # Subclassing FrameBuffer provides support for graphics primitives
 # http://docs.micropython.org/en/latest/pyboard/library/framebuf.html
