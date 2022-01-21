@@ -197,7 +197,8 @@ btn_porta.irq(handler=btn_porta_IR_handle, trigger=machine.Pin.IRQ_RISING, hard=
 encoder_btn_IR_counter = 0
 btn_enc.irq(handler=btn_encoder_IR_handle, trigger=machine.Pin.IRQ_RISING, hard=False)
 
-something_changed = True
+# Variable to stop permanent screen re-drawing. Spawned as True so it refreshes on first loop.
+refresh_display = True
 
 # Perma-Loop
 while True:
@@ -212,7 +213,7 @@ while True:
             mode_values[current_mode] = sane_maximum_times[current_mode]
         print('Timer:\t', str(mode_values[current_mode]))
         rot_val_old = rot_val_new
-        something_changed = True
+        refresh_display = True
 
     # Mode change:
     if encoder_btn_IR_counter > 0:
@@ -225,8 +226,7 @@ while True:
 
         print("Mode changed to " + str(current_mode))
         mode_values = read_mode_values(current_mode)
-        btn_enc_state = None
-        something_changed = True
+        refresh_display = True
         encoder_btn_IR_counter = 0
 
     # Start/Stop:
@@ -335,13 +335,13 @@ while True:
                     break
         relay.value(0)
         print("Done grinding!")
-        something_changed = True
+        refresh_display = True
         debug_led_btn_porta.value(0)
         # except Exception as e:
         #    print("ERROR! " + str(e))
         #    relay.value(0)
         porta_btn_IR_counter = 0
-    if something_changed:
+    if refresh_display:
         print("LCD working...")
         try:
             # pass
@@ -353,5 +353,5 @@ while True:
             display.show()
         except Exception as e:
             print("LCD error - " + str(e))
-        something_changed = False
+        refresh_display = False
     time.sleep_us(100)
