@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 """Convert PBMs to framebuffer streams - Output in comand line."""
+__authors__ = "MostlyHarmless (forum.micropython.org)"
+__license__ = "Sadly, unknown..."
+__version__ = "2019-12-26"
 # SOURCE: https://forum.micropython.org/viewtopic.php?t=4806&start=20
 import sys
 import os
