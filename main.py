@@ -13,7 +13,7 @@ try:
     import framebuf
 except Exception as e:
     print("Import failed!!! " + str(e))
-print("Welcome to BCG!")
+print("###  Welcome to BCG!  ###\n")
 
 # ? Setting the pins up:
 """ Pinout Sparkfun Pro Micro RP2040 (DEV-17717):
@@ -81,7 +81,7 @@ timer_display = machine.Timer()
             f.write(str(element) + "\n")
 """
 
-display.text('Welcome to BCG!\n', 0, 25, 1)
+display.text('Welcome to BCG!', 4, 23, 1)
 display.show()
 
 
@@ -117,29 +117,24 @@ def write_mode_values(which_mode_value):
     return 0
 
 
-def timer_grind_IR_handle(timer_grind):
-    global grind_counter_interrupts
-    grind_counter_interrupts += 1
+def irq_handle_timer_grind(timer_grind):
+    global grind_timer_IRQs
+    grind_timer_IRQs += 1
 
 
-def timer_button_hyst_IR_handle(timer_button_hyst):
-    global btnhyst_counter_interrupts
-    btnhyst_counter_interrupts += 1
+def irq_handle_timer_display(timer_display):
+    global disp_timer_IRQs
+    disp_timer_IRQs += 1
 
 
-def timer_display_IR_handle(timer_display):
-    global disp_counter_interrupts
-    disp_counter_interrupts += 1
+def irq_handle_btn_porta(_):
+    global porta_btn_IRQs
+    porta_btn_IRQs += 1
 
 
-def btn_porta_IR_handle(_):
-    global porta_btn_IR_counter
-    porta_btn_IR_counter += 1
-
-
-def btn_encoder_IR_handle(_):
-    global encoder_btn_IR_counter
-    encoder_btn_IR_counter += 1
+def irq_handle_btn_encoder(_):
+    global encoder_btn_IRQs
+    encoder_btn_IRQs += 1
 
 
 # ? Read the DIPs:
@@ -154,7 +149,7 @@ if current_mode == 3:
     current_mode = 0
 print("DIPs set to mode\t" + str(current_mode))
 
-# * Denominator for timers, e.g. a value of ten means one tenth of a second. Must be integer.
+# * Denominator for timers in Hz ([sec]^-1). Must be integer.
 # *   Check variables granularity, sane_maximum_times and mode_values if you change this!
 timer_denominator = 10
 # * Sane maximum times for your machine in 1/timer_denominator secs.
@@ -187,14 +182,14 @@ mode_values = read_mode_values(current_mode)
 rot_val_old = rotary.value()
 
 # * Starting the hardware timer:
-grind_counter_interrupts = 0
-timer_grind.init(freq=timer_denominator, mode=timer_grind.PERIODIC, callback=timer_grind_IR_handle)
-# disp_counter_interrupts = 0
-# timer_display.init(freq=timer_denominator, mode=timer_display.PERIODIC, callback=timer_display_IR_handle)
-porta_btn_IR_counter = 0
-btn_porta.irq(handler=btn_porta_IR_handle, trigger=machine.Pin.IRQ_RISING, hard=False)
-encoder_btn_IR_counter = 0
-btn_enc.irq(handler=btn_encoder_IR_handle, trigger=machine.Pin.IRQ_RISING, hard=False)
+grind_timer_IRQs = 0
+timer_grind.init(freq=timer_denominator, mode=timer_grind.PERIODIC, callback=irq_handle_timer_grind)
+disp_timer_IRQs = 0
+timer_display.init(freq=timer_denominator, mode=timer_display.PERIODIC, callback=irq_handle_timer_display)
+porta_btn_IRQs = 0
+btn_porta.irq(handler=irq_handle_btn_porta, trigger=machine.Pin.IRQ_RISING, hard=False)
+encoder_btn_IRQs = 0
+btn_enc.irq(handler=irq_handle_btn_encoder, trigger=machine.Pin.IRQ_RISING, hard=False)
 
 # * Variable to stop permanent screen re-drawing. Spawned as True so it refreshes on first loop.
 refresh_display = True
@@ -215,7 +210,7 @@ while True:
         refresh_display = True
 
     # ? Mode change:
-    if encoder_btn_IR_counter > 0:
+    if encoder_btn_IRQs > 0:
         if current_mode < 2:  # ! No mode 3 as of now
             current_mode += 1
             debug_led_btn_porta.value(0)
@@ -226,18 +221,18 @@ while True:
         print("Mode changed to " + str(current_mode))
         mode_values = read_mode_values(current_mode)
         refresh_display = True
-        encoder_btn_IR_counter = 0
+        encoder_btn_IRQs = 0
 
     # ? Start/Stop:
     # TODO: Deduplicate mode 0 and modes !0
-    if porta_btn_IR_counter > 0:
+    if porta_btn_IRQs > 0:
         # try:
         relay.value(1)
         btn_porta_state = None
         write_mode_values(mode_values)
-        grind_counter_interrupts = 0
+        grind_timer_IRQs = 0
         print("Start grinding!")
-        porta_btn_IR_counter = 0
+        porta_btn_IRQs = 0
 
         # ? Timer modes:
         if current_mode > 0:
@@ -245,9 +240,9 @@ while True:
             # * Double-break!  CREDIT: stackoverflow.com/a/6564670
             double_breaker = False
             while i > 0:
-                if grind_counter_interrupts > 0:
+                if grind_timer_IRQs > 0:
                     state = machine.disable_irq()
-                    grind_counter_interrupts -= 1
+                    grind_timer_IRQs -= 1
                     machine.enable_irq(state)
                     i -= 1
                     print("  |>  " + str(i))  # + "\t" + str(time.monotonic()))
@@ -255,27 +250,27 @@ while True:
                     display.text("GRIND", 0, 0, 1)
                     display.text(str(i), 0, 48, 1)
                     display.show()
-                if porta_btn_IR_counter > 0:
+                if porta_btn_IRQs > 0:
                     relay.value(0)
-                    grind_counter_interrupts = 0
+                    grind_timer_IRQs = 0
                     counter_pause_interrupts = 0
                     debug_led_btn_enc_pause.value(1)
                     print("Pause grinding")
-                    porta_btn_IR_counter = 0
+                    porta_btn_IRQs = 0
                     while True:
-                        if grind_counter_interrupts > 0:
+                        if grind_timer_IRQs > 0:
                             state = machine.disable_irq()
-                            grind_counter_interrupts -= 1
+                            grind_timer_IRQs -= 1
                             machine.enable_irq(state)
                             counter_pause_interrupts += 1
                             print("  ||  " + str(counter_pause_interrupts))
                             display.fill(0)
                             display.text("PAUSE", 0, 0, 1)
-                            display.text(str(grind_counter_interrupts), 0, 48, 1)
+                            display.text(str(grind_timer_IRQs), 0, 48, 1)
                             display.show()
-                        if porta_btn_IR_counter > 0:
+                        if porta_btn_IRQs > 0:
                             print("Pause ended")
-                            porta_btn_IR_counter = 0
+                            porta_btn_IRQs = 0
                             relay.value(1)
                             break
                         if counter_pause_interrupts >= time_pause:
@@ -292,9 +287,9 @@ while True:
             # * Double-break!  CREDIT: stackoverflow.com/a/6564670
             double_breaker = False
             while i < sane_maximum_times[current_mode]:
-                if grind_counter_interrupts > 0:
+                if grind_timer_IRQs > 0:
                     state = machine.disable_irq()
-                    grind_counter_interrupts -= 1
+                    grind_timer_IRQs -= 1
                     machine.enable_irq(state)
                     i += 1
                     print("  |>  " + str(i))  # + "\t" + str(time.monotonic()))
@@ -302,27 +297,27 @@ while True:
                     display.text("GRIND", 0, 0, 1)
                     display.text(str(i), 0, 48, 1)
                     display.show()
-                if porta_btn_IR_counter > 0:
+                if porta_btn_IRQs > 0:
                     relay.value(0)
-                    grind_counter_interrupts = 0
+                    grind_timer_IRQs = 0
                     counter_pause_interrupts = 0
                     debug_led_btn_enc_pause.value(1)
                     print("Pause grinding")
-                    porta_btn_IR_counter = 0
+                    porta_btn_IRQs = 0
                     while True:
-                        if grind_counter_interrupts > 0:
+                        if grind_timer_IRQs > 0:
                             state = machine.disable_irq()
-                            grind_counter_interrupts -= 1
+                            grind_timer_IRQs -= 1
                             machine.enable_irq(state)
                             counter_pause_interrupts += 1
                             print("  ||  " + str(counter_pause_interrupts))
                             display.fill(0)
                             display.text("PAUSE", 0, 0, 1)
-                            display.text(str(grind_counter_interrupts), 0, 48, 1)
+                            display.text(str(grind_timer_IRQs), 0, 48, 1)
                             display.show()
-                        if porta_btn_IR_counter > 0:
+                        if porta_btn_IRQs > 0:
                             print("Pause ended")
-                            porta_btn_IR_counter = 0
+                            porta_btn_IRQs = 0
                             relay.value(1)
                             break
                         if counter_pause_interrupts >= time_pause:
@@ -340,7 +335,7 @@ while True:
         # except Exception as e:
         #    print("ERROR! " + str(e))
         #    relay.value(0)
-        porta_btn_IR_counter = 0
+        porta_btn_IRQs = 0
     if refresh_display:
         print("LCD working...")
         try:
