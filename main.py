@@ -167,13 +167,15 @@ time_pause = 70
 # *     values, change variable timer_denominator to higher value (e.g. 100)
 granularity = 1
 
-# * Logos as framebuffers:
+# * Logos as frame buffers:
+# * Credit: "coffee bean": flolilo
 fb_coffee_bean = framebuf.FrameBuffer(bytearray(b'\x00~\x00\x00\xc3\x00\x01\x99\x80\x03\x08\xc0\x06'
                                                 b'\x0c`\x0c\x040\x0c\x040\x18\x04\x18\x18\x04\x18'
                                                 b'\x18\x04\x180\x0c\x0c0\x18\x0c0\x10\x0c0\x10\x0c0'
                                                 b'\x18\x0c\x18\x08\x18\x18\x0c\x18\x18\x04\x18\x0c'
                                                 b'\x040\x06\x0c`\x03\x08\xc0\x01\x89\x80\x00\xc3'
                                                 b'\x00\x00~\x00'), 24, 24, framebuf.MONO_HLSB)
+# * Credit: "M": flolilo
 fb_manual = framebuf.FrameBuffer(bytearray(b'\x00\x00\x00p\x00\x0ex\x00\x1e|\x00>n\x00vg\x00\xe6c'
                                            b'\x81\xc6a\xc3\x86`\xe7\x06`~\x06`<\x06`\x18\x06`\x00'
                                            b'\x06`\x00\x06`\x00\x06`\x00\x06`\x00\x06`\x00\x06`\x00'
@@ -359,6 +361,9 @@ while True:
         refresh_display = False
     elif not refresh_display and disp_timer_IRQs > 900:
         print("LCD standby...")
-        display.poweroff()
+        try:
+            display.poweroff()
+        except Exception as e:
+            print("Poweroff failed - " + str(e))
         disp_timer_IRQs = 0
     time.sleep_us(100)
