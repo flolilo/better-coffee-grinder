@@ -60,6 +60,21 @@ Currently, all is implemented with MicroPython - CircuitPython, at least some ve
 didn't play nice with the hardware timers.
 
 
+Logos
+-----
+
+Source: `"Re: converting png file to bytearray" by MostlyHarmless
+<https://forum.micropython.org/viewtopic.php?t=4806&start=20#p42487>`_
+
+1) Create your logos as regular BMPs (no use to make it bigger than the LCD's size).
+
+2) ``magick convert <YOUR_BMP> <FILENAME>.PBM``
+
+3) ``python ./PBMconvert.py <FILENAME>.PBM``
+
+4) Copy the resulting string from the terminal into the file.
+
+
 Parts
 =====
 
@@ -76,6 +91,8 @@ As of now:
 - *If weighing is feasible*: Any load cell <1kg + HX711
 
 - Encoder: ALPS STEC11B09 or similar
+
+- LCD: Adafruit 1.3" 128x64 OLED (Prod. ID 938)
 
 
 Installation
