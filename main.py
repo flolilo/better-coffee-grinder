@@ -203,18 +203,12 @@ something_changed = True
 while True:
     # Timer change:
     rot_val_new = rotary.value()
-    if current_mode != 0 and rot_val_old > rot_val_new:
-        if mode_values[current_mode] < sane_maximum_times[current_mode]:
-            mode_values[current_mode] += granularity
-        else:
+    if current_mode != 0 and rot_val_old != rot_val_new:
+        if 1 < mode_values[current_mode] < sane_maximum_times[current_mode]:
+            mode_values[current_mode] += ((rot_val_old - rot_val_new) * granularity)
+        elif mode_values[current_mode] >= sane_maximum_times[current_mode]:
             mode_values[current_mode] = 1
-        print('Timer:\t', str(mode_values[current_mode]))
-        rot_val_old = rot_val_new
-        something_changed = True
-    elif current_mode != 0 and rot_val_old < rot_val_new:
-        if mode_values[current_mode] > 1:
-            mode_values[current_mode] -= granularity
-        else:
+        elif mode_values[current_mode] <= 1:
             mode_values[current_mode] = sane_maximum_times[current_mode]
         print('Timer:\t', str(mode_values[current_mode]))
         rot_val_old = rot_val_new
